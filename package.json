@@ -1,0 +1,25 @@
+{
+  "name": "theory_test",
+  "version": "1.0.0",
+  "description": "A website for the Israeli theory test, which is part of the Israeli driver education program.",
+  "main": "app.js",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.9",
+    "ejs": "^3.1.6",
+    "express": "^4.17.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tomer-g200/theory_test.git"
+  },
+  "author": "Tomer Gil",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tomer-g200/theory_test/issues"
+  },
+  "homepage": "https://github.com/tomer-g200/theory_test#readme"
+}

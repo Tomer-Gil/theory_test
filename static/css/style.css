@@ -1,0 +1,62 @@
+:root {
+    --w3-light-gray: #f1f1f1;
+    --w3-white: white;
+    --bg-gray: gainsboro;
+    --bg-white: whitesmoke;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    direction: rtl;
+}
+
+body {
+    display: grid;
+    grid-template-areas: 'menu main main main';
+    /* grid-template-columns: auto auto auto auto; */
+    /* Makes each coulumn's width auto, which causes it to strech as much as possible, not equally over the viewport. */
+    grid-template-columns: repeat(4, 1fr);  /* equivalent to 1fr 1fr 1fr 1fr */
+    background-color: var(--bg-gray, var(--w3-light-gray));
+    font-family: Rubik;
+    grid-gap: 10px;  /* Developing purposes */
+}
+
+body > * {
+    background-color: var(--bg-white, var(--w3-white));
+    box-shadow: 0 4px 10px 0 rgb(0 0 0 / 20%), 0 4px 20px 0 rgb(0 0 0 / 19%);
+}
+
+nav {
+    grid-area: menu;
+}
+
+main {
+    grid-area: main;
+}
+
+main > ol > li::marker, li > div:first-of-type {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.vehicles_types {
+    display: flex;
+}
+
+.vehicles_types span {
+    white-space: nowrap;
+}
+
+.vehicles_types ol {
+    /* Previously ol:nth-of-type(2) */
+    display: flex;
+    justify-content: space-evenly;
+    width: 100%;
+}
+
+img {
+    width: 100%;
+}
