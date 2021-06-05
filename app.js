@@ -111,7 +111,7 @@ app.get('/', async function(req, res) {
         });
         let id = latestResource.id;
         try {
-            [resourceId, total, apiResponse] = await postRequestToCkan(id, OFFSET, LIMIT);
+            let [resourceId, total, apiResponse] = await postRequestToCkan(id, OFFSET, LIMIT);
             total = LIMIT;
             // total = total - OFFSET;
             var apiResponses = [];
