@@ -60,42 +60,49 @@ app.set('view engine', 'ejs');
 app.use("/public", express.static("static"));
 
 
-app.get('/', function(req, res) {
+app.get('/', async function(req, res) {
     const OFFSET = 0; // API default is 0
     const LIMIT = 20;  // API default is 100
-    new Promise(function(resolve, reject) {
-        let queryStrings = {
-            q: "tqhe"
-        };
-        let options = {
-            host: "data.gov.il",
-            path: ["/api/3/action/package_search", new URLSearchParams(queryStrings).toString()].join("?")
-        };
-        let callback = function(response) {
-            let apiResponse = [];
-            response.on("data", function(chunk) {
-                apiResponse = apiResponse.concat(chunk);
-            });
-            response.on("end", function() {
-                apiResponse = Buffer.concat(apiResponse);
-                apiResponse = JSON.parse(apiResponse);
-                let count = apiResponse.result.count;
-                if (count < 0) {
-                    reject(`Invalid number of packages (datasets) found for the query ${query} - less than 0.`);
-                } else if(count === 0) {
-                    reject(`No packages(datasets) with the query ${query} found.`);
-                } else if (count === 1) {
-                    resolve(apiResponse.result.results[0]);
-                } else {
-                    reject(`Too many packages (datasets) found for the query ${query} - greater than 1.`);
-                }
-            });
-        };
-        https.request(options, callback).end();
-    }).then(function(success) {
-        // Success holds one package object.
-        // Sanitize if necessary
-        let resources = success.resources;
+
+    // Searches the dataset(package) object using the CKAN's package_search GET method.
+    // Hopefully, only one dataset should be found, since there's only one package with each 
+    // package's name.
+    // But, in case it founds none, more than one, or any invalid number of packages, it rejects the response.
+    try {
+        let datasetObject = await new Promise(function(resolve, reject) {
+            let queryStrings = {
+                q: "tqhe"
+            };
+            let options = {
+                host: "data.gov.il",
+                path: ["/api/3/action/package_search", new URLSearchParams(queryStrings).toString()].join("?")
+            };
+            let callback = function(response) {
+                let apiResponse = [];
+                response.on("data", function(chunk) {
+                    apiResponse = apiResponse.concat(chunk);
+                });
+                response.on("end", function() {
+                    apiResponse = Buffer.concat(apiResponse);
+                    apiResponse = JSON.parse(apiResponse);
+                    let count = apiResponse.result.count;
+                    if (count < 0) {
+                        reject(`Invalid number of packages (datasets) found for the query ${query} - less than 0.`);
+                    } else if(count === 0) {
+                        reject(`No packages(datasets) with the query ${query} found.`);
+                    } else if (count === 1) {
+                        resolve(apiResponse.result.results[0]);
+                    } else {
+                        reject(`Too many packages (datasets) found for the query ${query} - greater than 1.`);
+                    }
+                });
+            };
+            https.request(options, callback).end();
+        });
+        
+        // datasetObject holds one package(dataset) object.
+        // Sanitize if necessary.
+        let resources = datasetObject.resources;
         resources = resources.filter(function(resource) {
             return resource.datastore_active;
         });
@@ -103,8 +110,8 @@ app.get('/', function(req, res) {
             return (currentLatest.last_modified > currentDate.last_modified ? currentLatest : currentDate);
         });
         let id = latestResource.id;
-        postRequestToCkan(id, OFFSET, LIMIT).then(function(success) {
-            [resourceId, total, apiResponse] = success;
+        try {
+            [resourceId, total, apiResponse] = await postRequestToCkan(id, OFFSET, LIMIT);
             total = LIMIT;
             // total = total - OFFSET;
             var apiResponses = [];
@@ -112,7 +119,8 @@ app.get('/', function(req, res) {
                 apiResponses = apiResponses.concat(postRequestToCkan(resourceId, LIMIT*i + OFFSET, LIMIT, i));
             }
             apiResponses = apiResponses.concat(postRequestToCkan(resourceId, LIMIT*i + OFFSET, total % LIMIT, i));
-            Promise.all([[apiResponse]].concat(apiResponses)).then((values) => {
+            try {
+                let values = await Promise.all([[apiResponse]].concat(apiResponses));
                 // Values - Array of arrays of one object - the API response' objects
 
                 const isSort = false;
@@ -184,11 +192,15 @@ app.get('/', function(req, res) {
                 }
                 res.render('index', {questions: questions_records});
                 console.log("Debug");
-            });
-        }, function(error) {});
-    }, function(error) {
+            } catch (error) {
+                console.log(error);
+            }
+        } catch(error) {
+            console.log(error);
+        }
+    } catch(error) {
         console.log(error);
-    });
+    }
 });
 
 app.listen(5000);
